@@ -1,3 +1,6 @@
+#include <stddef.h>
+
+// Registers
 #define PORT  PORTB
 #define DDR   DDRB
 
@@ -52,7 +55,8 @@ void shiftOut( uint8_t data );
 void clear();
 void display();
 void command( uint8_t value );
-void print( uint8_t value );
+void printCharacterToLcd( uint8_t value );
+void printToLcd( uint8_t value[], size_t length );
 
 uint8_t _dataPin;
 uint8_t _clockPin;

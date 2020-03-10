@@ -1,6 +1,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <shiftLcd.h>
+#include <string.h>
 
 // According to the datasheet we need to wait at least 40ms after power rises above
 // 2.7v before sending commands.
@@ -18,11 +19,12 @@ void initialiseLcd( uint8_t data, uint8_t clock, uint8_t latch ) {
 
     _delay_ms( 50 );
 
-    // Clear the shift register
+    // Clear the shift register by sending 16 zeroes to it
     shiftOut( 0x00 );
     shiftOut( 0x00 );
 
-    // set 4 bit mode
+    // Set 4 bit mode
+    // This has to be done three times (as stated by the documentation)
     write4Bits( 0x03, 0 );
     _delay_ms( 5 );
 
@@ -83,7 +85,13 @@ void shiftLatch()
    _delay_loop_1( 1 );
 }
 
-void print( uint8_t value ) {
+void printToLcd( uint8_t value[], size_t length ) {
+    for ( uint8_t i = 0; i < length; i++ ) {
+        printCharacterToLcd( value[ i ] );
+    }
+}
+
+void printCharacterToLcd( uint8_t value ) {
     send( value, 1 );
 }
 
@@ -114,7 +122,6 @@ void write4Bits( uint8_t value, uint8_t mode ) {
     data = value << 4 & 0xF0;
     
     // Set upper nibble of data to be sent, set enable clock high as well as the register select pin
-    // data |= (( value << 4 ) & 0xF0 ) | ( 1 << LCD_EN_PIN ) | ( mode << LCD_RS_PIN );
     cmd |= EN_SWITCH;
     shiftOut( data | cmd );
     _delay_us( 1 );
