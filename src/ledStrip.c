@@ -1,14 +1,14 @@
 #include <ws2812Config.h>
-#include <light_ws2812.h>
 #include <util/delay.h>
 #include <main.h>
 #include <ledStrip.h>
+#include <light_ws2812.h>
 
 struct cRGB colors[ 8 ];
 struct cRGB led[ NUM_LEDS ];
 
-void ledInitialise() {
-    DDRB |= ( 1 << LED_SERIAL );
+void initialiseLed() {
+    DDRB |= 1 << ws2812_pin;
 
     colors[ 0 ].r = 150; colors[ 0 ].g = 150; colors[ 0 ].b = 150;  // Faint white
     colors[ 1 ].r = 255; colors[ 1 ].g = 000; colors[ 1 ].b = 000;  // Red
@@ -38,10 +38,16 @@ void executeLedPatternCommand( uint8_t command[ 4 ] ) {
 }
 
 void ledPatternRainbow() {
-    uint8_t k, j = 1;
+    uint8_t k, j, i = 1;
+
+    for ( i = NUM_LEDS; i > 0; i--) {
+        led[ i - 1 ].r = 0;
+        led[ i - 1 ].g = 0;
+        led[ i - 1 ].b = 0;
+    }
 
     while ( 1 ) {
-        if ( _valueReceived > 0 ) {
+        if ( _valueReceived ) {
             break;
         }
 
@@ -92,7 +98,7 @@ void ledPatternRainbow() {
 
 void ledPatternKITT( uint8_t red, uint8_t green, uint8_t blue ) {
     while ( 1 ) {
-        if ( _valueReceived > 0 ) {
+        if ( _valueReceived ) {
             break;
         }
     }
@@ -110,7 +116,7 @@ void ledPatternSolid( uint8_t red, uint8_t green, uint8_t blue ) {
 
 void ledPatternPulse( uint8_t red, uint8_t green, uint8_t blue ) {
     while ( 1 ) {
-        if ( _valueReceived > 0 ) {
+        if ( _valueReceived ) {
             break;
         }
     }

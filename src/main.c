@@ -1,10 +1,10 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <string.h>
-#include <shiftLcd.h>
 #include <main.h>
 #include <util.h>
 #include <ledStrip.h>
+#include <util/delay.h>
 
 // Pin change interrupt detects start of UART reception.
 ISR ( PCINT0_vect ) {
@@ -26,19 +26,13 @@ ISR ( USI_OVF_vect ) {
   _valueReceived = USIDR;           // Store received value
 
   if ( _valueReceived == MSG_HEADER ) {
-    _msgHeaderReceived = 1;         // Set header received flag
-  } else if ( _valueReceived == MSG_FOOTER ) {
-    _msgFooterReceived = 1;         // Set footer received flag
+    _msgHeaderReceived = 1;
+  } else if( _valueReceived == MSG_FOOTER ) {
+    _msgFooterReceived = 1;
   }
 
   GIFR = 1 << PCIF;                 // Clear pin change interrupt flag.
   GIMSK |= 1 << PCIE;               // Enable pin change interrupts again
-}
-
-void clearFlags() {
-  _msgPos = 0;                      // Set the position to 0
-  _msgHeaderReceived = 0;           // Clear the header received flag
-  _msgFooterReceived = 0;           // Clear the footer received flag
 }
 
 void initialiseFlags() {
@@ -48,41 +42,52 @@ void initialiseFlags() {
   _msgFooterReceived = 0;
 }
 
+void clearFlags() {
+  _msgPos = 0;
+  _msgHeaderReceived = 0;
+  _msgFooterReceived = 0;
+}
+
 void init() {
   // enable interrupts
   sei();
 
-  initialiseLcd( HC595_SERIAL , HC595_CLOCK, HC595_LATCH );
+  initialiseFlags();
+  initialiseLed();
 
   DDRB &= ~( 1 << RX );             // Set RX pin as input
   USICR = 0;                        // Disable USI.
   GIFR = 1 << PCIF;                 // Clear pin change interrupt flag.
   GIMSK |= 1 << PCIE;               // Enable pin change interrupts
   PCMSK |= 1 << PCINT0;             // Enable pin change on pin 0
-
-  
 }
 
 // Main **********************************************
 int main() {
   init();                                               // Initialise
   while ( 1 ) {
-    if ( _valueReceived > 0 ) {                         // If we have received a new byte
+    if ( _valueReceived ) {                             // If we have received a new byte
       // Bytes are received in reverse order, so we have to reverse them
       uint8_t formattedValue = reverseByte( _valueReceived );
-      printCharacterToLcd( formattedValue );            // Print received value for debugging purposes
-      _valueReceived = 0;                               // Clear the received value
 
-      if ( _msgHeaderReceived & 1 ) {
-        // Message header received, append received value to command array
-        _msgCommand[ _msgPos ] = _valueReceived;        // Write the received value to the command array
-        _msgPos++;                                      // Increment the position in the array
-      } else if ( _msgFooterReceived & 1 ) {
+      if ( _msgPos == 5) {
+        // Something went wrong, received command too long. Reset
+        clearFlags();
+        memset( _msgCommand, 0, _msgPos - 1 );
+      } else if ( _msgFooterReceived ) {
         // Message footer received, execute command, clear command array and reset flags
-        clearFlags();                                   // Clear previously set flags
+        clearFlags();
+        _valueReceived = 0;                             // Clear the received value
         executeLedPatternCommand( _msgCommand );        // Execute received command
-        memset( _msgCommand, 0, sizeof _msgCommand );   // Reset the contents of the command array
+        memset( _msgCommand, 0, _msgPos );   // Reset the contents of the command array
+      } else if ( _msgHeaderReceived && _valueReceived != MSG_HEADER ) {
+        // Message header received, append received value to command array
+        _msgCommand[ _msgPos ] = formattedValue;        // Write the received value to the command array
+        _msgPos++;                                      // Increment the position in the array
       }
+
+      _valueReceived = 0;                               // Clear the received value
     }
+    _delay_us(1);
   }
 }

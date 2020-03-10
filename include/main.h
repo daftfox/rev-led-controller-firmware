@@ -5,8 +5,8 @@
 #define HC595_SERIAL    PINB2   // Shift register data signal
 
 // Message constants
-#define MSG_HEADER      0x5B    // Define message header '['
-#define MSG_FOOTER      0x5D    // Define message footer ']'
+#define MSG_HEADER      0xDA    // Define message header '['
+#define MSG_FOOTER      0xBA    // Define message footer ']'
 
 // Flags
 uint8_t _valueReceived;

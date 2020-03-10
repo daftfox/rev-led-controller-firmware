@@ -1,9 +1,9 @@
 // Pins
 #define LED_SERIAL  PINB1   // Define LED serial pin
-#define NUM_LEDS    60      // Define number of LEDs
+#define NUM_LEDS    8      // Define number of LEDs
 
-#define COLORLENGTH (NUM_LEDS/2)
-#define FADE (256/COLORLENGTH)
+#define COLORLENGTH (NUM_LEDS*10)
+#define FADE 1
 
 // Patterns
 #define RAINBOW     0x52    // Define rainbow command parameter 'R'
@@ -15,5 +15,5 @@ void ledPatternRainbow();
 void ledPatternKITT( uint8_t red, uint8_t green, uint8_t blue );
 void ledPatternSolid( uint8_t red, uint8_t green, uint8_t blue );
 void ledPatternPulse( uint8_t red, uint8_t green, uint8_t blue );
-void ledInitialise();
+void initialiseLed();
 void executeLedPatternCommand( uint8_t command[ 4 ] );
