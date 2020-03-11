@@ -1,1 +1,0 @@
-unsigned char reverseByte ( uint8_t value );
